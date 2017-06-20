@@ -28,7 +28,8 @@ colormap gray;
 % imagesc(Artefact3);
 % selection of one BScan
 BScan = Artefact3(:,3500:4825);
-% Show selection 
+
+% S 
 figure;
 colormap gray;
 imagesc(BScan);
@@ -49,7 +50,7 @@ end
 if(LineEdge(1) == 0)
     LineEdge(1) = LineEdge(2);
 end
-% nochmal drüber gucken ! was hat das gemacht?
+% drüber gucken !
 % for i1 = 2:BScanN
 %     if(LineEdge(i1) == 0 && LineEdge(i1+20) ~= 0)
 %         LineEdge(i1) = LineEdge(i1-1);
@@ -67,21 +68,21 @@ for i1 = 2:BScanN
     end
 end
 figure
-title('Detected Line unfiltered');
-plot(1:BScanN,LineEdge);
+ title('Detected Line unfiltered');
+ plot(1:BScanN,LineEdge);
  
 %Median Filter
-ylim([0,500]);
-LineEdgeMedian = medfilt1(LineEdge,20);
-for i1 = 1 : 2
-    LineEdgeMedian = medfilt1(LineEdgeMedian,20);
-end
-figure;
-title('Median Filter x1');
-plot(BScanN,LineEdgeMedian);
-ylim([0,500]);
+ ylim([0,500]);
+ LineEdgeMedian = medfilt1(LineEdge,20);
+ for i1 = 1 : 2
+     LineEdgeMedian = medfilt1(LineEdgeMedian,20);
+ end
+ figure;
+ title('Median Filter');
+ plot(BScanN,LineEdgeMedian);
+ ylim([0,500]);
 
-%Mittelwert Filter nochmal drüber laufen lassen (keine große Verbesserung)
+ %Mittelwert Filter
 windowSize = 30; 
 b = (1/windowSize)*ones(1,windowSize);
 a = 1;
@@ -89,9 +90,9 @@ for i1 = 1:2
     LineEdgeMedian = filter(b,a,LineEdgeMedian);
 end
 figure
-title('Mittelwertfilter');
-plot(1:BScanN,LineEdge);
-ylim([0,500]);
+title('Mittelwert');
+ plot(1:BScanN,LineEdge);
+ ylim([0,500]);
  
 %Don´t use the first k filtered elements for the line
 k = 100; %Maybe k is constant
