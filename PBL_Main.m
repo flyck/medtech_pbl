@@ -27,6 +27,15 @@ imagesc(C);
 %PBL_MScan2Bscan_Gapfinder();
 % Alexandra's method
 MtoBscan();
+%% 
+% remove Artefacts
+% looks weird ´, there´s a black patch in the middle 
+J = imtranslate(C,[0, -175]);
+figure ('name','shifted image')
+imagesc(J)
+J = imtranslate(J,[0, 175]);
+figure ('name','remove Artefacts')
+imagesc(J)
 %%
 % Compute and display the scans in cartesian coordinates
 InterpolationTransformation();
