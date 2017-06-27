@@ -1,63 +1,82 @@
-%%Preprocessing 
+%% Preprocessing 
+% clearvars -except Offset Chirp
+% close all
 
-%%noch sehr unübersichtlich
+% %filename = '09052017034909__raw_3.bin';
+% filename = '09052017034420__raw_2.bin';
+% filehandle = fopen(filename);
 
-%Sensor Offset 
-clearvars -except Offset Chirp
-close all
+ bildhoehe = 1024; 
+a=10000; %number of the Ascan 
 
-filename = '09052017034909__raw_3.bin';
-%filename = '09052017034420__ascan_2.bin';
-filehandle = fopen(filename);
-bildhoehe = 1024; 
-a=100; %number of the Ascan 
-raw = fread(filehandle,[1024,10000],'uint16');
-raw1=raw*540;
-
+raw = fread(filehandle,[1024,a],'uint16');
+fclose(filehandle)
+raw=raw*540;
 
 
-MOffset=zeros(1024,10000);
-for i=1:10000
+%% Sensor Offset (Dunkelstrom)
+
+MOffset=zeros(1024,a);
+for i=1:a
 MOffset(:,i)=Offset;
-end 
+end
 
+%remove offset
 Mraw=raw-MOffset;
 
+    %example of one ascan
+    figure('name','Dunkelstrom entfernt')
+    plot(1:1024,Mraw(:,a))
 
-plot(1:1024,Mraw(:,a))
 
+%% detect and remove DC
+%mean value of each row of Mraw 
+dc=zeros(1024,1);
+for i=1:1024
+dc(i,1)=mean(Mraw(i,:));
+end 
 
-%detect DC
-p=polyfit([1:1024]',Mraw(:,a),10);
-y2 = polyval(p,1:1024);
-
-figure
-plot(1:1024,y2)
+DC=zeros(1024,a);
+for i=1:a
+DC(:,i)=dc;
+end 
 
 %remove DC
-D=Mraw(:,a)-y2';
-figure
-plot(1:1024,D)
+rawDC=Mraw(:,1:a)-DC;
 
-
+    %example for one ascan
+    figure('name','DC removed')
+    plot(1:1024,rawDC(:,1))
+%% Apodisation
 %Window Function (Hann)
 w=hann(1024);
-figure
+figure('name','Hann window')
 plot(1:1024,w)
 
-
 %Intensity times Hann 
-Raw=D.*w;
-figure
-plot(1:1024,Raw);
+rawW=rawDC.*w*500;
 
 
-%Fourier Transform
-F=fft(Raw);
-BF=abs(F);
+%% Dechirp
+% interpolation at chirp query points 
+DChirp=interp1(Chirp,rawW,0:1023);
+
+    %example for one ascan
+    figure('name','Adiposation with Hann window')
+    plot(1:1024,DChirp(:,1));
+
+
+%% Fourier Transform
+
+rawF=fft(DChirp);
+
+BF=abs(rawF);
 %Übung:  Zur Darstellung üblicherweise logarithmische Kompression 20*ln(X)
 BF1=20*log(BF);
 %half of the signal 
-BF2=BF1(1:512);
+BF2=BF1(1:512,:);
 
+
+figure('name','Mscan')
+colormap gray;
 imagesc(BF2)

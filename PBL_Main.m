@@ -1,7 +1,14 @@
 %% Gruppe1 PBL - Main
 % Load the measured data into the workspace.
-close all;
-clear all;
+clearvars -except Offset Chirp
+close all
+
+
+filename = '09052017034909__raw_3.bin';
+filehandle = fopen(filename);
+
+Rohdatenverarbeitung();
+
 filename = '09052017034909__ascan_3.bin';
 %filename = '09052017034420__ascan_2.bin';
 filehandle = fopen(filename);
