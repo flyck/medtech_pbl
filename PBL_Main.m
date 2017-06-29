@@ -3,11 +3,8 @@
 clearvars -except Offset Chirp
 close all
 
-
-filename = '09052017034909__raw_3.bin';
-filehandle = fopen(filename);
-
-Rohdatenverarbeitung();
+%Rohdatenverarbeitung();
+% Doesnt need to be called from main? Interrupts testing of everything else
 
 filename = '09052017034909__ascan_3.bin';
 %filename = '09052017034420__ascan_2.bin';
@@ -37,6 +34,7 @@ MtoBscan();
 %% 
 % remove Artefacts
 % looks weird ´, there´s a black patch in the middle 
+
 J = imtranslate(C,[0, -175]);
 figure ('name','shifted image')
 imagesc(J)
@@ -45,18 +43,27 @@ figure ('name','remove Artefacts')
 imagesc(J)
 %%
 % Compute and display the scans in cartesian coordinates
-InterpolationTransformation();
+
+%InterpolationTransformation();
 %% 
 % Filter artefacts
+
 PBL_Filter_Artefacts();
+%%
+% Determine Diameter
+% C shouldnt have artifacts at this point! Otherwise the diameter cant be
+% computed correctly.
+
+PBL_Determine_Diameter();
 %% 
-% Interpolation and coordinate transformation
-FinishedBScan = Artefact1(:,3500:4900); %todo, artefact 2 algo left out here
-FinishedBScan(1:150,:) = 1;
-figure; %attempt to correct the image display
-imagesc(FinishedBScan);
-figure;
-N = 512*2;
-M = N;
-imR = PolarToIm (FinishedBScan, 0, 1, M, N);
-imagesc(imR);
+% Sample Interpolation and coordinate transformation
+% 
+% FinishedBScan = C(:,3500:4900); %todo, artefact 2 algo left out here
+% FinishedBScan(1:150,:) = 1;
+% figure; %attempt to correct the image display
+% imagesc(FinishedBScan);
+% figure;
+% N = 512*2;
+% M = N;
+% imR = PolarToIm (FinishedBScan, 0, 1, M, N);
+% imagesc(imR);
