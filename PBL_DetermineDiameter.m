@@ -10,21 +10,21 @@ close all;
 bscan = 4; % the 4th scan
 start = werte_MaxMax(bscan) 
 finish = werte_MaxMax(bscan + 1)
-Artefact2 = Artefact1(:,start:finish);
-Artefact2 = imcomplement(Artefact2);
-[m,n] = size(Artefact2);
+C = C(:,start:finish);
+C = imcomplement(C);
+[m,n] = size(C);
 
 colormap gray;
-imagesc(Artefact2);
+imagesc(C);
 %Between ubound and lbound should be the oszillation
 lbound = 320; %Everthing is turned black after this coordinate
 ubound = 250; %Where the edge detection start
 for x = 1:n %make everthing behind the pipe black & until this line the edge will be detected
-    Artefact2(lbound:bildhoehe,x) = 0;
+    C(lbound:bildhoehe,x) = 0;
 end
 colormap gray;
-imagesc(Artefact2);
-Artefact3 = Artefact2;
+imagesc(C);
+Artefact3 = C;
 MaskArtefact3 = zeros(bildhoehe,n);
 
 for x = 1:n %fill the holes behind the pipe edge  
