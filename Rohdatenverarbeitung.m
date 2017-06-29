@@ -3,10 +3,10 @@
 % close all
 
 % %filename = '09052017034909__raw_3.bin';
-% filename = '09052017034420__raw_2.bin';
-% filehandle = fopen(filename);
+filename = '09052017034420__raw_2.bin';
+filehandle = fopen(filename);
 
- bildhoehe = 1024; 
+bildhoehe = 1024; 
 a=10000; %number of the Ascan 
 
 raw = fread(filehandle,[1024,a],'uint16');
@@ -15,6 +15,8 @@ raw=raw*540;
 
 
 %% Sensor Offset (Dunkelstrom)
+% The offset variable has to be loaded manually by double-clicking the file
+% "offset.mat" on the left!
 
 MOffset=zeros(1024,a);
 for i=1:a

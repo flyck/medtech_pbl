@@ -1,7 +1,15 @@
+%% Detects the diameter of a single bscan
+% input:
+% - image: C
+% - borders of detected bscans: werteMaxMax 
+% - the index of the bscan we should look at: bscan
+% output:
+% - the diameter of the 
 close all;
 % select one bscan using our previously detected values
-start = werte_MaxMax(4) % the 4th scan
-finish = werte_MaxMax(5)
+bscan = 4; % the 4th scan
+start = werte_MaxMax(bscan) 
+finish = werte_MaxMax(bscan + 1)
 Artefact2 = Artefact1(:,start:finish);
 Artefact2 = imcomplement(Artefact2);
 [m,n] = size(Artefact2);
