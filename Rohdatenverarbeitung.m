@@ -15,8 +15,8 @@ raw=raw*540;
 
 
 %% Sensor Offset (Dunkelstrom)
-% The offset variable has to be loaded manually by double-clicking the file
-% "offset.mat" on the left!
+
+load('offset.mat');
 
 MOffset=zeros(1024,a);
 for i=1:a
