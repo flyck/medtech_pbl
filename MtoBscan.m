@@ -1,4 +1,4 @@
-function MtoBscan(C)
+function werte_MaxMax = MtoBscan(C)
     % f=fopen('09052017034909__ascan_3.bin')
     % B=fread(f,'float32');
 
@@ -7,10 +7,11 @@ function MtoBscan(C)
     % filename = '09052017034909__ascan_3.bin';
     % filehandle = fopen(filename);
     % B=fread(filehandle,'float32');
-    C=original;
+    % C=original;
 
     figure('name','Ascans')
     imagesc(C)
+    CMAX=max(C(:));
 
     %Linien entfernen 
     C(78:83,:)=35/CMAX;
@@ -28,16 +29,16 @@ function MtoBscan(C)
     %Gelbe Punkte auf einer Linie werden gesucht
     for i=4:6
         for k=1:10000
-       if BW(i,k)==1
-        x(k)=1; 
-       else 
-           x(k)=0;
-       end 
+           if BW(i,k)==1
+            x(k)=1; 
+           else 
+            x(k)=0;
+           end 
         end 
     end 
     
-    %figure('name','Bereiche der Maxima')
-    %imagesc(x)
+    figure('name','Bereiche der Maxima')
+    imagesc(x)
 
     eins=0;
     anz_eins=0;
@@ -70,18 +71,18 @@ function MtoBscan(C)
 
     for i = 1:anz_eins
         if(werte_eins(i)~=0)
-    anz_Max=anz_Max+1; 
-    werte_Max(anz_Max)=werte_eins(i); 
+            anz_Max=anz_Max+1; 
+            werte_Max(anz_Max)=werte_eins(i); 
         end
     end
-
+    
     figure('name','Schnittstellen')
     imagesc(C)
     hold on 
 
     werte_MaxMax(1)=werte_zwei(1);
     for i=1:anz_Max-1
-    werte_MaxMax(i+1)=werte_Max(i+1)+werte_MaxMax(i);
+        werte_MaxMax(i+1)=werte_Max(i+1)+werte_MaxMax(i);
     end 
 
     A = 80*ones(anz_Max-1,1);

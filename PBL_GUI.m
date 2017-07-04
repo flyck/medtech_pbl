@@ -22,7 +22,7 @@ function varargout = PBL_GUI(varargin)
 
 % Edit the above text to modify the response to help PBL_GUI
 
-% Last Modified by GUIDE v2.5 03-Jul-2017 23:04:07
+% Last Modified by GUIDE v2.5 04-Jul-2017 22:03:23
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,7 +59,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes PBL_GUI wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.GUIHandle);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -78,16 +78,26 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-axes(handles.axes1);
-PBL_Main("init");
+x = get(handles.edit2,'String'); %edit1 being Tag of ur edit box
+if isempty(x)
+    fprintf('Error: Enter Text first\n');
+else
+    % Write code for computation you want to do 
+    axes(handles.axes1);
+    C = PBL_Main("init", x);
+    assignin('base', 'C', C);
+    setappdata(handles.GUIHandle, 'C', C);
+end
 
 % --- Executes on button press in pushbutton2.
 function pushbutton2_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+C = getappdata(handles.GUIHandle , 'C');
 axes(handles.axes2);
-MtoBscan();
+werte_MaxMax = MtoBscan(C);
+setappdata(handles.GUIHandle, 'werte_MaxMax', werte_MaxMax);
 
 % --- Executes on button press in pushbutton3.
 function pushbutton3_Callback(hObject, eventdata, handles)
@@ -132,3 +142,26 @@ function pushbutton1_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+
+function edit2_Callback(hObject, eventdata, handles)
+% hObject    handle to edit2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit2 as text
+%        str2double(get(hObject,'String')) returns contents of edit2 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
