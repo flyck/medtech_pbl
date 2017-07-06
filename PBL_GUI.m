@@ -22,7 +22,7 @@ function varargout = PBL_GUI(varargin)
 
 % Edit the above text to modify the response to help PBL_GUI
 
-% Last Modified by GUIDE v2.5 04-Jul-2017 22:03:23
+% Last Modified by GUIDE v2.5 05-Jul-2017 23:11:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -78,13 +78,13 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-x = get(handles.edit2,'String'); %edit1 being Tag of ur edit box
-if isempty(x)
+filename = get(handles.edit2,'String'); %edit1 being Tag of ur edit box
+if isempty(filename)
     fprintf('Error: Enter Text first\n');
 else
     % Write code for computation you want to do 
     axes(handles.axes1);
-    C = PBL_Main("init", x);
+    C = PBL_Main("init", filename);
     assignin('base', 'C', C);
     setappdata(handles.GUIHandle, 'C', C);
 end
@@ -95,9 +95,13 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 C = getappdata(handles.GUIHandle , 'C');
-axes(handles.axes2);
-werte_MaxMax = MtoBscan(C);
-setappdata(handles.GUIHandle, 'werte_MaxMax', werte_MaxMax);
+if isempty(C)
+    fprintf('Error: Load MScan first.\n');
+else
+    axes(handles.axes2);
+    werte_MaxMax = MtoBscan(C);
+    setappdata(handles.GUIHandle, 'werte_MaxMax', werte_MaxMax);
+end
 
 % --- Executes on button press in pushbutton3.
 function pushbutton3_Callback(hObject, eventdata, handles)
@@ -164,4 +168,19 @@ function edit2_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in pushbutton5.
+function pushbutton5_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+C = getappdata(handles.GUIHandle , 'C');
+if isempty(C)
+    fprintf('Error: Load MScan first.\n');
+else
+    axes(handles.axes3);
+    C = PBL_Filter_Artefacts(C);
+    setappdata(handles.GUIHandle, 'C', C);
 end

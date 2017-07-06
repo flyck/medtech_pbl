@@ -13,7 +13,7 @@ function C = PBL_Main(sequence, argument)
 end
 
 function C = main
-    C = init();
+    C = init("09052017034909__ascan_3.bin");
 
     % Convert the MScan into BScans using one of our methods: 
     % Felix's method
@@ -31,6 +31,7 @@ function C = main
 end
 
 % Load the measured data into the workspace.
+% For testing: C = PBL_Main("init",'09052017034909__ascan_3.bin');
 function C = init(filename)
     clearvars -except Offset Chirp filename
     % close all % commented since this closes the gui!

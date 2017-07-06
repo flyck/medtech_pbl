@@ -9,35 +9,39 @@ function werte_MaxMax = MtoBscan(C)
     % B=fread(filehandle,'float32');
     % C=original;
 
-    figure('name','Ascans')
+    %figure('name','Ascans')
     imagesc(C)
-    CMAX=max(C(:));
 
     %Linien entfernen 
-    C(78:83,:)=35/CMAX;
+    %CMAX=max(C(:));
+    %C(78:83,:)=35/CMAX; %CMAX needs to be passed as value or this doesnt
+    %work
+    C(78:83,:)=0.35;
 
     %Medianfilter/Kantenfilter (es wird nur ein Ausschnitt aus der Matrix betrachtet)
     C1=medfilt2(C);
-    figure('name','Ascan Medianfilter')
+    %figure('name','Ascan Medianfilter')
+    colormap gray;
     imagesc(C1)
     C2=C1(80:120,:);
     [BW,thresh]= edge(C2,'Prewitt');
 
-    figure('name','kantengefiltert')
+    %figure('name','kantengefiltert')
     imagesc(BW)
 
     %Gelbe Punkte auf einer Linie werden gesucht
+    [m,n] = size(C);
     for i=4:6
-        for k=1:10000
-           if BW(i,k)==1
-            x(k)=1; 
-           else 
-            x(k)=0;
-           end 
+        for k=1:n
+            if BW(i,k)==1
+                x(k)=1; 
+            else 
+                x(k)=0;
+            end 
         end 
     end 
     
-    figure('name','Bereiche der Maxima')
+    %figure('name','Bereiche der Maxima')
     imagesc(x)
 
     eins=0;
@@ -76,7 +80,7 @@ function werte_MaxMax = MtoBscan(C)
         end
     end
     
-    figure('name','Schnittstellen')
+    % figure('name','Schnittstellen')
     imagesc(C)
     hold on 
 
@@ -87,3 +91,4 @@ function werte_MaxMax = MtoBscan(C)
 
     A = 80*ones(anz_Max-1,1);
     plot(werte_MaxMax(1:end-1),A,'*')
+end
