@@ -1,35 +1,40 @@
-function [CDiameter,COrginal] = PBL_Filter_Artefacts(C_Artefact, C)
-    %% Filters artefacts
+close all; 
+%% Filters artefacts
     % Parameters:
     medfilt2_iteration_Th = 4; % amount of times medfilt2 should be executed
-    im2bw_Th_1 = 0.53; % threshhold for first im2bw
-    gaussfilt_Th = 6; % amount of times to execute gaussian filter
-    im2bw_Th_2 = 0.45; % threshhold for second im2bw
-    
-    %original(:,:) = C; % used for backup later
+    im2bw_Th_1 = 0.35; % threshhold for first im2bw
+    gaussfilt_Th = 5; % amount of times to execute gaussian filter
+    im2bw_Th_2 = 0.6; % threshhold for second im2bw
+    CatheterArtefactLower = 160;
+    original(:,:) = C; % used for backup later
     %% 
+    figure;
+    imagesc(C);
     % Increase contrast
-
+    figure;
     C = histeq(C); %possible alternative: imadjust(), gives worse results though
     colormap gray;
     imagesc(C);
-    %% 
-    % Smooth it out and binarize it
-
-    for i = 1:medfilt2_iteration_Th
-        C = medfilt2(C,[3,3]);
-    end
-    C = im2bw(C, im2bw_Th_1);
+    figure;
     colormap gray;
-    imagesc(C);
+    C(1:CatheterArtefactLower,:) = 0;
+     %% 
+%     % Smooth it out and binarize it
+% 
+     for i = 1:medfilt2_iteration_Th
+         C = medfilt2(C,[3,3]);
+     end
+%         colormap gray;
+%     imagesc(C);
+%     figure;
+    C = im2bw(C, im2bw_Th_1);
     %% 
     % Try different filters for getting rid of noise and binarize it again
 
-    % C = im2double(C);
-    % C = imgaussfilt(C, gaussfilt_Th);
-    % C = im2bw(C, im2bw_Th_2); % the higher the value the blacker the picture
-    % colormap gray;
-    % imagesc(C);
+    C = im2double(C);
+    C = imgaussfilt(C, 6);
+    C = im2bw(C, im2bw_Th_2); % the higher the value the blacker the picture
+    imagesc(C);
     %%  
     % Filtering the Artefact Line between Row 250 and 190
 
@@ -58,7 +63,9 @@ function [CDiameter,COrginal] = PBL_Filter_Artefacts(C_Artefact, C)
             disp('100% der Artefakte gefiltert') 
         end
     end
+     colormap gray;
     imagesc(Artefact_mask);
+    figure;
     %% 
     % Filtering Peaks and Lows (doesnt work well yet)
     % Artefact2_finish = finish-10; %um den ganzen Bereich zu scannen
@@ -82,6 +89,10 @@ function [CDiameter,COrginal] = PBL_Filter_Artefacts(C_Artefact, C)
     %% 
     % Apply and show the previously computed mask
     C_Artefact = C;
+    colormap gray;
+    imagesc(C_Artefact);
+    figure;
+    colormap gray;
     C = original;
     grey_val = 0.4; % todo manueller wert
     for j = 250 : -1 : 190
@@ -92,5 +103,4 @@ function [CDiameter,COrginal] = PBL_Filter_Artefacts(C_Artefact, C)
         end
     end
     colormap gray;
-    imagesc(C);
-end
+    imagesc(C_Artefact)

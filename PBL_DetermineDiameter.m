@@ -10,7 +10,7 @@ close all;
 bscan = 4; % the 4th scan
 start = werte_MaxMax(bscan) 
 finish = werte_MaxMax(bscan + 1)
-C = C(:,start:finish);
+C = C_Artefact(:,start:finish);
 C = imcomplement(C);
 [m,n] = size(C);
 
@@ -62,12 +62,11 @@ end
 if(LineEdge(1) == 0)
     LineEdge(1) = LineEdge(2);
 end
-% drüber gucken !
-% for i1 = 2:BScanN
-%     if(LineEdge(i1) == 0 && LineEdge(i1+20) ~= 0)
-%         LineEdge(i1) = LineEdge(i1-1);
-%     end
-% end
+for i1 = 2:BScanN
+    if(LineEdge(i1) == 0)
+        LineEdge(i1) = LineEdge(i1-1);
+    end
+end
 
 %Filtering the detected Line, if the value jumps more  than 3 pixels from
 %column to another, then jump only one pixel (is probably a disturbance)
@@ -130,6 +129,7 @@ EdgeimR = PolarToIm (Edge, 0, 1, M, N);
 colormap gray;
 EdgeimR = im2bw(EdgeimR, 0.4);
 imagesc(EdgeimR);
+hold on;
 %Find the highest cricle point
 n = 0;
 y = 100;
@@ -179,7 +179,6 @@ end
 n = 0;
 y = M - 100;
 x = M - 100;
-j2= 0;
 while(x > 1 && n == 0)
     if(EdgeimR(x,y) > 0.5 && n == 0)
         RightPoint = [x,y];
@@ -191,18 +190,89 @@ while(x > 1 && n == 0)
     end
     x = x - 1;
 end
-
+%Top right
+n = 0;
+y = M - 100;
+x = 100;
+while(x < N && n == 0)
+    if(EdgeimR(x,y) > 0.5 && n == 0)
+        TRPoint = [x,y];
+        n = n + 1;
+    end
+    if(x == M - y)
+        x = M - y;
+        y = y - 1;
+    end
+    x = x + 1;
+end
+plot(TRPoint(2),TRPoint(1),'*');
+%Bottom Right
+n = 0;
+y = M - 100;
+x = M - 100;
+while(x > 1 && n == 0)
+    if(EdgeimR(x,y) > 0.5 && n == 0)
+        BRPoint = [x,y];
+        n = n + 1;
+    end
+    if(x == y)
+        x = y;
+        y = y - 1;
+    end
+    x = x - 1;
+end
+plot(BRPoint(2),BRPoint(1),'*');
+%Bottom left
+n = 0;
+y = 100;
+x = M - 100;
+while(x > 1 && n == 0)
+    if(EdgeimR(x,y) > 0.5 && n == 0)
+        BLPoint = [x,y];
+        n = n + 1;
+    end
+    if(M - x ==  y)
+        x = M - y;
+        y = y + 1;
+    end
+    x = x - 1;
+end
+plot(BLPoint(2),BLPoint(1),'*');
+%Top Left
+n = 0;
+y = 100;
+x = 100;
+while(x > 1 && n == 0)
+    if(EdgeimR(x,y) > 0.5 && n == 0)
+        TLPoint = [x,y];
+        n = n + 1;
+    end
+    if(x == y)
+        x = y;
+        y = y + 1;
+    end
+    x = x + 1;
+end
+plot(TLPoint(2),TLPoint(1),'*');
 % VerticalV = HighPoint - LowPoint;
 % syms t
 % LineVertical = LowPoint + t * VerticalV;
 % HorizontalV = RightPoint - LeftPoint;
 % syms u
 % LineHorizontal = LeftPoint + u * HorizontalV;
-plot(HighPoint(2),HighPoint(1),'*')
-plot(LowPoint(2),LowPoint(1),'*')
-plot(RightPoint(2),RightPoint(1),'*')
-plot(LeftPoint(2),LeftPoint(1),'*')
 
+% %Intersection of corner lines
+x = [TRPoint(1) TLPoint(1); BLPoint(1) BRPoint(1)];  %# Starting points in first row, ending points in second row
+y = [TRPoint(2) TLPoint(2); BLPoint(2) BRPoint(2)];
+dx = diff(x);  %# Take the differences down each column
+dy = diff(y);
+den = dx(1)*dy(2)-dy(1)*dx(2);  %# Precompute the denominator
+ua = (dx(2)*(y(1)-y(3))-dy(2)*(x(1)-x(3)))/den;
+ub = (dx(1)*(y(1)-y(3))-dy(1)*(x(1)-x(3)))/den;
+xi = x(1)+ua*dx(1);
+yi = y(1)+ua*dy(1);
+xi1 = round(xi);
+yi1 = round(yi);
 %Intersection of horizontal and vertical line
 x = [LowPoint(1) LeftPoint(1); HighPoint(1) RightPoint(1)];  %# Starting points in first row, ending points in second row
 y = [LowPoint(2) LeftPoint(2); HighPoint(2) RightPoint(2)];
@@ -215,32 +285,48 @@ xi = x(1)+ua*dx(1);
 yi = y(1)+ua*dy(1);
 xi = round(xi);
 yi = round(yi);
-plot(yi,xi,'r*')
+% How far away are the two intersections + take the point between them
+d1 = sqrt((xi - xi1)^2+(yi - yi1)^2);
+xi = (xi1 + xi)/2;
+yi = (yi1 + yi)/2;
 
-% Recenter the image
-drx = N/2 - xi;
-dry = N/2 - yi;
-EdgeimRShift = circshift(EdgeimR,drx,2);
-EdgeimRShift = circshift(EdgeimRShift,dry,1);
+plot(HighPoint(2),HighPoint(1),'*')
+plot(LowPoint(2),LowPoint(1),'*')
+plot(RightPoint(2),RightPoint(1),'*')
+plot(LeftPoint(2),LeftPoint(1),'*')
+plot(yi,xi,'r*')
+plot(yi1,xi1,'b*')
+plot(512,512,'*')
 figure;
+% Recenter the image, only if the difference between the two detected point
+% (Corner and Horizontal Intersection) is less than 100 -> if it is more ther must be something wrong 
+if(d1 < 100) 
+    drx = (-1) * (xi - N/2);
+    dry = (-1) * (yi - N/2);
+    EdgeimRShift = circshift(EdgeimR,drx,1);
+    EdgeimRShift = circshift(EdgeimRShift,dry,2);
+else
+    EdgeimRShift = EdgeimR;
+end
 imagesc(EdgeimRShift);
 hold on;
+plot(512 + dry, 512 + drx,'*');
 plot(512,512,'g*')
 EdgeimP = ImToPolar (EdgeimRShift, 0, 1, M/2, BScanN);
-hold off;
 figure;
 imagesc(EdgeimP)
-
+hold off;
 % Detect the Diameter
 % the row in which the pipe was detected in one B-Scan + row of the edge of a B-Scan after half a rotation
 % asuming that the rotation was constant during one B-Scan
 for i = 1:round(BScanN/2)
-    for j = 150:300 %variable which has to be set: look in which rows the pipe is detected
-        if (i+(round(BScanN/2)) > size(LineEdge, 2))
-            disp("exceeding matrix limitations")
-        else
+ %   for j = 150:300 %variable which has to be set: look in which rows the pipe is detected
+        if (i+(round(BScanN/2)) > size(LineEdge))
+             disp('exceeding matrix limitations3')
+             Diameter(i) = Diameter(i-1);
+         else
             Diameter(i) = LineEdge(i) + LineEdge(i+(round(BScanN/2)));
-        end
+  %      end
     end
 end
 
