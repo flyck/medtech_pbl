@@ -1,3 +1,5 @@
+% This function returns the scanned image without the artefacts introduced
+% by the measurement device.
 function C = PBL_Filter_Artefacts(C)
     %% Filters artefacts
     % Parameters:
@@ -5,8 +7,18 @@ function C = PBL_Filter_Artefacts(C)
     im2bw_Th_1 = 0.53; % threshhold for first im2bw
     gaussfilt_Th = 6; % amount of times to execute gaussian filter
     im2bw_Th_2 = 0.45; % threshhold for second im2bw
+    CatheterArtefactLower = 160;
+    
+    %% 
+    % Cut off the catheter at the top by greying it out
+    C(1:CatheterArtefactLower,:) = 0.44;
+    
+    %%
+    % Copy the picture, this is later used to substract the computed mask
+    % from it and then return it as a result
     
     original = C; % used for backup later
+    
     %% 
     % Increase contrast
 
