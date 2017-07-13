@@ -1,6 +1,6 @@
 % This function returns the scanned image without the artefacts introduced
 % by the measurement device.
-function [C,C_Artefacts] = PBL_Filter_Artefacts(C)
+function [C_Artefacts, C] = PBL_Filter_Artefacts(C)
     %% Filters artefacts
     % Parameters:
     medfilt2_iteration_Th = 4; % amount of times medfilt2 should be executed
@@ -34,12 +34,13 @@ function [C,C_Artefacts] = PBL_Filter_Artefacts(C)
     C = im2bw(C, im2bw_Th_1);
     colormap gray;
     imagesc(C);
+    C_Malte = C;
     %% 
     % Try different filters for getting rid of noise and binarize it again
 
     % C = im2double(C);
-    C = imgaussfilt(C, gaussfilt_Th);
-    C = im2bw(C, im2bw_Th_2); % the higher the value the blacker the picture
+    % C = imgaussfilt(C, gaussfilt_Th);
+    % C = im2bw(C, im2bw_Th_2); % the higher the value the blacker the picture
     % colormap gray;
     % imagesc(C);
     %%  
@@ -57,40 +58,9 @@ function [C,C_Artefacts] = PBL_Filter_Artefacts(C)
                 Artefact_mask(j,i) = 1;
             end
         end
-        if (round(3*n/4) == i) 
-            disp('25% der Artefakte gefiltert') 
-        end
-        if (round(n/2) == i) 
-            disp('50% der Artefakte gefiltert') 
-        end
-        if (round(n/4) == i) 
-            disp('75% der Artefakte gefiltert') 
-        end
-        if (2 == i) 
-            disp('100% der Artefakte gefiltert') 
-        end
     end
     imagesc(Artefact_mask);
-    %% 
-    % Filtering Peaks and Lows (doesnt work well yet)
-    % Artefact2_finish = finish-10; %um den ganzen Bereich zu scannen
-    % for i = 11 : Artefact2_finish
-    %     for j =  170:300
-    %         if((Artefact_mask(j,i)==0) && ((Artefact1(j,i+10) == 1) && Artefact1(j,i-10) == 1)) 
-    %             Artefact_mask(j,i) = 1;
-    %         end
-    %     end
-    %     if (round(Artefact2_finish/4) == i) 
-    %         disp("25% erreicht") 
-    %     end
-    %     if (round(Artefact2_finish/2) == i) 
-    %         disp("50% erreicht") 
-    %     end
-    %     if (round(3*Artefact2_finish/4) == i) 
-    %         disp("75% erreicht") 
-    %     end
-    % end
-    % disp("100% erreicht")
+
     %% 
     % Apply and show the previously computed mask
     C_Artefacts = C;
@@ -105,4 +75,22 @@ function [C,C_Artefacts] = PBL_Filter_Artefacts(C)
     end
     colormap gray;
     imagesc(C);
+    
+    % now create the Artefacts Malte needs
+    CN = C_Malte;
+    CN = im2double(CN);
+    CN = imgaussfilt(CN, gaussfilt_Th);
+    CN = im2bw(CN, im2bw_Th_2); % the higher the value the blacker the picture
+    CN = imcomplement(CN);
+    CN = im2double(CN);
+    [m,n] = size(CN);
+    for i = n-10 : -1 : 1 
+        for j =  250 :-1: 190
+            % überprüfe die beiden Punkte darunter auf weiß und einen Punkt 10 weiter rechts von dem schwarzen Punkt ausgehend
+            if((CN(j,i)==0) && (CN(j + 1,i) == 1) && (CN(j + 2,i) == 1) && (CN(j+2,i+10) == 1)) 
+                CN(j,i) = 1;
+            end
+        end
+    end
+    C_Artefacts = CN;
 end

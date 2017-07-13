@@ -135,16 +135,17 @@ function pushbutton3_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 C = getappdata(handles.GUIHandle , 'C');
 C_Artefacts = getappdata(handles.GUIHandle , 'C_Artefacts');
-werte_MaxMax = getappdata(handles.GUIHandle , '');
+werte_MaxMax = getappdata(handles.GUIHandle , 'werte_MaxMax');
 if isempty(C) || isempty(C_Artefacts) || isempty(werte_MaxMax)
     fprintf('Error: Filter Artefacts first.\n');
 else
-    value = get(handles.edit1,'string');
+    value = str2double(get(handles.edit1,'string'));
     axes(handles.axes2);
     lbound = werte_MaxMax(value);
     ubound = werte_MaxMax(value+1);
-    C_Artefact = C_Artefact(:,lbound:ubound);
-    [DiameterMin, DiameterMax,DiameterEverage] = PBL_Diameter(C_Artefact);
+    fprintf("cutting artefacts from lbound %d to ubound %d\n", lbound, ubound);
+    C_Artefacts = C_Artefacts(:,lbound:ubound);
+    [DiameterMin, DiameterMax,DiameterEverage] = PBL_Diameter(C_Artefacts);
     setappdata(handles.GUIHandle, 'werte_MaxMax', werte_MaxMax);
 end
 
@@ -244,7 +245,7 @@ if isempty(C)
     fprintf('Error: Load MScan first.\n');
 else
     axes(handles.axes1);
-    [C, C_Artefacts] = PBL_Filter_Artefacts(C);
+    [C_Artefacts, C] = PBL_Filter_Artefacts(C);
     setappdata(handles.GUIHandle, 'C', C);
     setappdata(handles.GUIHandle, 'C_Artefacts', C_Artefacts);
 end
