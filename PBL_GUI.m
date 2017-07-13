@@ -22,7 +22,7 @@ function varargout = PBL_GUI(varargin)
 
 % Edit the above text to modify the response to help PBL_GUI
 
-% Last Modified by GUIDE v2.5 10-Jul-2017 22:10:53
+% Last Modified by GUIDE v2.5 13-Jul-2017 12:40:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -84,6 +84,17 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+C = getappdata(handles.GUIHandle, 'C');
+if not(isempty(C))
+    rmappdata(handles.GUIHandle, 'C');
+end
+werte_MaxMax = getappdata(handles.GUIHandle, 'werte_MaxMax');
+if not(isempty(werte_MaxMax))
+    rmappdata(handles.GUIHandle, 'werte_MaxMax');
+end
+% reset the edit fields
+set(handles.text3, 'string', "...");
+set(handles.edit1, 'string', 1);
 selected_index = get(handles.listbox1,'value');
 filenames = get(handles.listbox1,'string');
 filename = filenames{selected_index};
@@ -108,9 +119,13 @@ CMAX = getappdata(handles.GUIHandle , 'CMAX');
 if isempty(C) || isempty(CMAX)
     fprintf('Error: Load MScan first.\n');
 else
-    axes(handles.axes2);
+    axes(handles.axes1);
     werte_MaxMax = MtoBscan(C, CMAX);
     setappdata(handles.GUIHandle, 'werte_MaxMax', werte_MaxMax);
+    % adapt the slider
+    set(handles.slider1,'value',1);
+    set(handles.slider1,'min',1);
+    set(handles.slider1,'max',numel(werte_MaxMax)-1);
 end
 
 % --- Executes on button press in pushbutton3.
@@ -128,7 +143,32 @@ function edit1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit1 as text
 %        str2double(get(hObject,'String')) returns contents of edit1 as a double
-
+value = str2double(get(hObject,'String'));
+werte_MaxMax = getappdata(handles.GUIHandle , 'werte_MaxMax');
+if isempty(werte_MaxMax)
+    fprintf('Error: Detect BScans first.\n');
+else
+    if value >= 1 && value <= numel(werte_MaxMax)-1
+       % set the slider value
+       set(handles.slider1,'value',value);
+       % display the image range
+       lbound = werte_MaxMax(value);
+       ubound = werte_MaxMax(value+1);
+       set(handles.text3, 'string',strcat(num2str(lbound)," - ",num2str(ubound)));
+       % display the image if the boundaries are ok
+       C = getappdata(handles.GUIHandle , 'C');
+       [m,n] = size(C);
+       if lbound >= 1 && ubound <= n
+           % mark overlay in axes1
+           axes(handles.axes1);
+           PBL_GUI_PlotOverlay(C, werte_MaxMax, lbound, ubound);
+           % display image in axes2
+           axes(handles.axes2);
+           C = C(:,lbound:ubound);
+           imagesc(C);
+       end
+    end
+end
 
 % --- Executes during object creation, after setting all properties.
 function edit1_CreateFcn(hObject, eventdata, handles)
@@ -190,7 +230,7 @@ C = getappdata(handles.GUIHandle , 'C');
 if isempty(C)
     fprintf('Error: Load MScan first.\n');
 else
-    axes(handles.axes3);
+    axes(handles.axes1);
     C = PBL_Filter_Artefacts(C);
     setappdata(handles.GUIHandle, 'C', C);
 end
@@ -216,4 +256,86 @@ function listbox1_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on slider movement.
+function slider1_Callback(hObject, eventdata, handles)
+% hObject    handle to slider1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+werte_MaxMax = getappdata(handles.GUIHandle , 'werte_MaxMax');
+if isempty(werte_MaxMax)
+    fprintf('Error: Detect Bscanfirst.\n');
+else
+    ubound = numel(werte_MaxMax)-1;
+    set(hObject,'Max', ubound);
+    value = round(get(hObject,'Value'));
+    set(hObject, 'Value', value); 
+    set(handles.edit1,'String',num2str(value));
+    % do what he edit1 callback does, set text and display the images
+    lbound = werte_MaxMax(value);
+    ubound = werte_MaxMax(value+1);
+    set(handles.text3, 'string',strcat(num2str(lbound)," - ",num2str(ubound)));
+    % display the image if the boundaries are ok
+    C = getappdata(handles.GUIHandle , 'C');
+    [m,n] = size(C);
+    if lbound >= 1 && ubound <= n
+       % mark overlay in axes1
+       axes(handles.axes1);
+       PBL_GUI_PlotOverlay(C, werte_MaxMax, lbound, ubound);
+       % display image in axes2
+       axes(handles.axes2);
+       C = C(:,lbound:ubound);
+       imagesc(C);
+    end
+% attempt to make the slider fit the image position, the slider seems
+% too rigid for this though
+%     ubound = werte_MaxMax(numel(werte_MaxMax));
+%     lbound = werte_MaxMax(1);
+%     % load the structure
+%     handles = guidata(hObject);
+%     set(hObject, 'max', ubound);
+%     % set the slider to the minimal boundary if it is in default state
+%     if get(hObject,'Value') == 1
+%         set(hObject, 'Value', lbound);
+%         fprintf("Setting value to lbound %d\n", lbound);
+%     end
+%     % round the slider value to one of the possible values in werte_MaxMax
+%     value = get(hObject,'Value');
+%     for i = 1 : numel(werte_MaxMax)
+%         if value < werte_MaxMax(i)
+%             break
+%         end
+%     end
+%     % round to nearest number
+%     if i > 1 % respect werte_MaxMax boundaries
+%         delta = werte_MaxMax(i) - value
+%         percent = ( werte_MaxMax(i) - werte_MaxMax(i-1) ) / delta
+%         if percent > 0.5
+%             new_Value = werte_MaxMax(i);
+%         else
+%             new_Value = werte_MaxMax(i-1);
+%         end
+%     else
+%         new_Value = 1;
+%     end
+%     fprintf("Setting value to i %d\n", new_Value);
+%     set(hObject, 'Value', new_Value);
+    % update the structure
+    guidata(hObject,handles);
+end
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+
+
+% --- Executes during object creation, after setting all properties.
+function slider1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to slider1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
