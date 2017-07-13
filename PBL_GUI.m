@@ -104,7 +104,7 @@ else
     % Write code for computation you want to do 
     axes(handles.axes1);
     [C,CMAX] = PBL_Main("init", filename);
-    assignin('base', 'C', C); %writes to user workspace
+    % assignin('base', 'C', C); %writes to user workspace
     setappdata(handles.GUIHandle, 'C', C);
     setappdata(handles.GUIHandle, 'CMAX', CMAX);
 end
@@ -133,7 +133,20 @@ function pushbutton3_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton3 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+C = getappdata(handles.GUIHandle , 'C');
+C_Artefacts = getappdata(handles.GUIHandle , 'C_Artefacts');
+werte_MaxMax = getappdata(handles.GUIHandle , '');
+if isempty(C) || isempty(C_Artefacts) || isempty(werte_MaxMax)
+    fprintf('Error: Filter Artefacts first.\n');
+else
+    value = get(handles.edit1,'string');
+    axes(handles.axes2);
+    lbound = werte_MaxMax(value);
+    ubound = werte_MaxMax(value+1);
+    C_Artefact = C_Artefact(:,lbound:ubound);
+    [DiameterMin, DiameterMax,DiameterEverage] = PBL_Diameter(C_Artefact);
+    setappdata(handles.GUIHandle, 'werte_MaxMax', werte_MaxMax);
+end
 
 
 function edit1_Callback(hObject, eventdata, handles)
@@ -231,8 +244,9 @@ if isempty(C)
     fprintf('Error: Load MScan first.\n');
 else
     axes(handles.axes1);
-    C = PBL_Filter_Artefacts(C);
+    [C, C_Artefacts] = PBL_Filter_Artefacts(C);
     setappdata(handles.GUIHandle, 'C', C);
+    setappdata(handles.GUIHandle, 'C_Artefacts', C_Artefacts);
 end
 
 
