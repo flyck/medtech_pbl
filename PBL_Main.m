@@ -3,23 +3,23 @@
 % to call functions within this matlab file from outside (the gui) we need
 % this form of a main function, due to hints in this link:
 % https://de.mathworks.com/matlabcentral/newsreader/view_thread/282878
-function C = PBL_Main(sequence, argument)
+function [C, CMAX] = PBL_Main(sequence, argument)
     switch sequence
         case "init"
-            C = init(argument);
+            [C, CMAX] = init(argument);
         case "main"
-            C = main();
+            [C, CMAX] = main();
     end
 end
 
-function C = main
-    C = init("09052017034909__ascan_3.bin");
+function [C, CMAX] = main()
+    [C, CMAX] = init("09052017034909__ascan_3.bin");
 
     % Convert the MScan into BScans using one of our methods: 
     % Felix's method
     %PBL_MScan2Bscan_Gapfinder();
     % Alexandra's method
-    MtoBscan(C);
+    MtoBscan(C, CMAX);
     
     % Filter artefacts
     PBL_Filter_Artefacts();
@@ -32,7 +32,7 @@ end
 
 % Load the measured data into the workspace.
 % For testing: C = PBL_Main("init",'09052017034909__ascan_3.bin');
-function C = init(filename)
+function [C, CMAX] = init(filename)
     clearvars -except Offset Chirp filename
     % close all % commented since this closes the gui!
 

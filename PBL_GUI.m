@@ -22,7 +22,7 @@ function varargout = PBL_GUI(varargin)
 
 % Edit the above text to modify the response to help PBL_GUI
 
-% Last Modified by GUIDE v2.5 09-Jul-2017 22:33:32
+% Last Modified by GUIDE v2.5 10-Jul-2017 22:10:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,6 +55,12 @@ function PBL_GUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for PBL_GUI
 handles.output = hObject;
 
+% fill listbox1 with filenames
+files = dir(fullfile(pwd,'*ascan*'));
+set(handles.listbox1,'string',{files.name});
+% select the third item
+set(handles.listbox1,'value',3);
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -78,15 +84,18 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-filename = get(handles.edit2,'String'); %edit1 being Tag of ur edit box
+selected_index = get(handles.listbox1,'value');
+filenames = get(handles.listbox1,'string');
+filename = filenames{selected_index};
 if isempty(filename)
     fprintf('Error: Enter Text first\n');
 else
     % Write code for computation you want to do 
     axes(handles.axes1);
-    C = PBL_Main("init", filename);
-    assignin('base', 'C', C);
+    [C,CMAX] = PBL_Main("init", filename);
+    assignin('base', 'C', C); %writes to user workspace
     setappdata(handles.GUIHandle, 'C', C);
+    setappdata(handles.GUIHandle, 'CMAX', CMAX);
 end
 
 % --- Executes on button press in pushbutton2.
@@ -95,11 +104,12 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 C = getappdata(handles.GUIHandle , 'C');
-if isempty(C)
+CMAX = getappdata(handles.GUIHandle , 'CMAX');
+if isempty(C) || isempty(CMAX)
     fprintf('Error: Load MScan first.\n');
 else
     axes(handles.axes2);
-    werte_MaxMax = MtoBscan(C);
+    werte_MaxMax = MtoBscan(C, CMAX);
     setappdata(handles.GUIHandle, 'werte_MaxMax', werte_MaxMax);
 end
 
@@ -183,4 +193,27 @@ else
     axes(handles.axes3);
     C = PBL_Filter_Artefacts(C);
     setappdata(handles.GUIHandle, 'C', C);
+end
+
+
+% --- Executes on selection change in listbox1.
+function listbox1_Callback(hObject, eventdata, handles)
+% hObject    handle to listbox1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns listbox1 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from listbox1
+
+
+% --- Executes during object creation, after setting all properties.
+function listbox1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to listbox1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end
