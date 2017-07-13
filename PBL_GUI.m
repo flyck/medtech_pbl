@@ -145,8 +145,16 @@ else
     ubound = werte_MaxMax(value+1);
     fprintf("cutting artefacts from lbound %d to ubound %d\n", lbound, ubound);
     C_Artefacts = C_Artefacts(:,lbound:ubound);
-    [DiameterMin, DiameterMax,DiameterEverage] = PBL_Diameter(C_Artefacts);
-    setappdata(handles.GUIHandle, 'werte_MaxMax', werte_MaxMax);
+    C= C(:,lbound:ubound);
+    [DiameterMin, DiameterMax,DiameterEverage] = PBL_Diameter(C_Artefacts, C);
+    setappdata(handles.GUIHandle, 'DiameterMin', DiameterMin);
+    setappdata(handles.GUIHandle, 'DiameterMax', DiameterMax);
+    setappdata(handles.GUIHandle, 'DiameterEverage', DiameterEverage);
+    message = '';
+    message = sprintf('%sDiameterMin: %.2f\n', message, DiameterMin);
+    message = sprintf('%sDiameterMax: %.2f\n', message, DiameterMax);
+    message = sprintf('%sDiameterAverage: %.2f\n', message, DiameterEverage);
+    set(handles.text5,'String', message);
 end
 
 

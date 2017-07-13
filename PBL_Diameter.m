@@ -1,17 +1,18 @@
-function [DiameterMin, DiameterMax,DiameterEverage] = PBL_Diameter(C_Artefact)
-    colormap gray;
-    imagesc(C_Artefact);
+function [DiameterMin, DiameterMax,DiameterEverage] = PBL_Filter_Artefacts(C_Artefact, C)
+    %colormap gray;
+    %imagesc(C_Artefact);
     %Between ubound and lbound should be the oszillation
     lbound = 320; %Everthing is turned black after this coordinate
     ubound = 250; %Where the edge detection start
+    %C_Artefact = C3(:,3500:4800);
     [m,n] = size(C_Artefact);
     for x = 1:n %make everthing behind the pipe black & until this line the edge will be detected
-        C_Artefact(lbound:bildhoehe,x) = 0;
+        C_Artefact(lbound:m,x) = 0;
     end
-    figure;
+    % figure;
     colormap gray;
     imagesc(C_Artefact);
-    MaskC_Artefact = zeros(bildhoehe,n);
+    MaskC_Artefact = zeros(m,n);
 
     for x = 1:n %fill the holes behind the pipe edge  
         for y = ubound : lbound
@@ -24,18 +25,14 @@ function [DiameterMin, DiameterMax,DiameterEverage] = PBL_Diameter(C_Artefact)
             end
         end
     end
-
-    % BScan = C_Artefact;
-
-    % S 
-    figure;
+    
+    % figure;
     colormap gray;
     imagesc(C_Artefact);
-    BScanN = size(C_Artefact,2);
-    LineEdge = zeros(BScanN,1);
-    Diameter = zeros(round(BScanN/2),1);
+    LineEdge = zeros(n,1);
+    Diameter = zeros(round(n/2),1);
 
-    for x = 1:BScanN %Detect the edge of the pipe
+    for x = 1:n %Detect the edge of the pipe
         for y = 150:320
             if(C_Artefact(y,x) == 0 && C_Artefact(y-1,x) == 1) 
                 LineEdge(x) = y;
@@ -47,7 +44,7 @@ function [DiameterMin, DiameterMax,DiameterEverage] = PBL_Diameter(C_Artefact)
     if(LineEdge(1) == 0)
         LineEdge(1) = LineEdge(2);
     end
-    for i1 = 2:BScanN
+    for i1 = 2:n
         if(LineEdge(i1) == 0)
             LineEdge(i1) = LineEdge(i1-1);
         end
@@ -55,7 +52,7 @@ function [DiameterMin, DiameterMax,DiameterEverage] = PBL_Diameter(C_Artefact)
 
     %Filtering the detected Line, if the value jumps more  than 3 pixels from
     %column to another, then jump only one pixel (is probably a disturbance)
-    for x = 2:BScanN
+    for x = 2:n
         if(LineEdge(x-1) > LineEdge(x) + 3)
             LineEdge(x) = LineEdge(x-1) - 1;
         end
@@ -63,9 +60,9 @@ function [DiameterMin, DiameterMax,DiameterEverage] = PBL_Diameter(C_Artefact)
             LineEdge(x) = LineEdge(x-1) + 1;
         end
     end
-    figure
+    % figure
     title('Detected Line unfiltered');
-    plot(1:BScanN,LineEdge);
+    plot(1:n,LineEdge);
 
     %Median Filter
      ylim([0,500]);
@@ -73,9 +70,9 @@ function [DiameterMin, DiameterMax,DiameterEverage] = PBL_Diameter(C_Artefact)
      for x = 1 : 2
          LineEdgeMedian = medfilt1(LineEdgeMedian,20);
      end
-     figure;
+     % figure;
      title('Median Filter');
-     plot(BScanN,LineEdgeMedian);
+     plot(n,LineEdgeMedian);
      ylim([0,500]);
 
      %Mittelwert Filter
@@ -85,267 +82,156 @@ function [DiameterMin, DiameterMax,DiameterEverage] = PBL_Diameter(C_Artefact)
     for x = 1:2
         LineEdgeMedian = filter(b,a,LineEdgeMedian);
     end
-    figure
+    % figure
     title('Mittelwert');
-     plot(1:BScanN,LineEdge);
+     plot(1:n,LineEdge);
      ylim([0,500]);
 
     %Don´t use the first k filtered elements for the line
     k = 100; %Maybe k is constant
-    LineEdge(k:BScanN) = LineEdgeMedian(k:BScanN);
-    figure
+    LineEdge(k:n) = LineEdgeMedian(k:n);
+    % figure
     title('filtered Line');
-    plot(1:BScanN,LineEdge);
+    plot(1:n,LineEdge);
     ylim([0,500]);
 
     %Make a Matrix to convert to cartesian
-    Edge = zeros(512,BScanN);
-    LineEdge = round(LineEdge);
-    for x = 1:BScanN
-        Edge(LineEdge(x),x) = 1;
+    Edge = zeros(512,n);
+    EdgeEdge = zeros(512,n);
+    LineEdge = (round(LineEdge));
+    for x = 1:n
+        for i = 1:LineEdge(x)
+                Edge(i,x) = 1;
+        end
+        EdgeEdge(LineEdge(x),x) = 1;
     end
+    
+    
     %%
     %Move the Picture to get real calculations
-    figure;
-    imagesc(LineEdge);
+    % figure;
+    imagesc(Edge);
     N = 512*2;
     M = N;
-    EdgeimR = PolarToIm (Edge, 0, 1, M, N);
+    fprintf("Computing PolarToIm for EdgeimR\n");
+    EdgeEdgeimR = PolarToIm(EdgeEdge, 0, 1, M, N);
+    EdgeimR = PolarToIm(Edge, 0, 1, M, N);
+    % figure;
     colormap gray;
     EdgeimR = im2bw(EdgeimR, 0.4);
+    EdgeEdgeimR = im2bw(EdgeEdgeimR, 0.4);
     imagesc(EdgeimR);
     hold on;
-    %Find the highest cricle point
-    n = 0;
-    y = 100;
-    x = 100;
-    while(y < N && n == 0)
-        if(EdgeimR(x,y) > 0.5 && n == 0)
-            LowPoint = [x,y];
-            n = n + 1;
-        end
-        if(y == N-1)
-            y = 100;
-            x = x + 1;
-        end
-        y = y + 1;
-    end
-    %lowest circle point
-    n = 0;
-    y = M - 100;
-    x = M - 100;
-    while(y > 1 && n == 0)
-        if(EdgeimR(x,y) > 0.5 && n == 0)
-            HighPoint = [x,y];
-            n = n + 1;
-        end
-        if(y == 2)
-            y = M - 100;
-            x = x - 1;
-        end
-        y = y - 1;
-    end
-    %left circle point
-    n = 0;
-    y = 100;
-    x = 100;
-    while(x < N && n == 0)
-        if(EdgeimR(x,y) > 0.5 && n == 0)
-            LeftPoint = [x,y];
-            n = n + 1;
-        end
-        if(x == N-1)
-            x = 100;
-            y = y + 1;
-        end
-        x = x + 1;
-    end
-    %right circle point
-    n = 0;
-    y = M - 100;
-    x = M - 100;
-    while(x > 1 && n == 0)
-        if(EdgeimR(x,y) > 0.5 && n == 0)
-            RightPoint = [x,y];
-            n = n + 1;
-        end
-        if(x == 2)
-            x = M - 100;
-            y = y - 1;
-        end
-        x = x - 1;
-    end
-    % %Top right
-    % n = 0;
-    % y = M - 100;
-    % x = 100;
-    % while(x < N && n == 0)
-    %     if(EdgeimR(x,y) > 0.5 && n == 0)
-    %         TRPoint = [x,y];
-    %         n = n + 1;
-    %     end
-    %     if(x == M - y)
-    %         x = M - y;
-    %         y = y - 1;
-    %     end
-    %     x = x + 1;
-    % end
-    % plot(TRPoint(2),TRPoint(1),'*');
-    % %Bottom Right
-    % n = 0;
-    % y = M - 100;
-    % x = M - 100;
-    % while(x > 1 && n == 0)
-    %     if(EdgeimR(x,y) > 0.5 && n == 0)
-    %         BRPoint = [x,y];
-    %         n = n + 1;
-    %     end
-    %     if(x == y)
-    %         x = y;
-    %         y = y - 1;
-    %     end
-    %     x = x - 1;
-    % end
-    % plot(BRPoint(2),BRPoint(1),'*');
-    % %Bottom left
-    % n = 0;
-    % y = 100;
-    % x = M - 100;
-    % while(x > 1 && n == 0)
-    %     if(EdgeimR(x,y) > 0.5 && n == 0)
-    %         BLPoint = [x,y];
-    %         n = n + 1;
-    %     end
-    %     if(M - x ==  y)
-    %         x = M - y;
-    %         y = y + 1;
-    %     end
-    %     x = x - 1;
-    % end
-    % plot(BLPoint(2),BLPoint(1),'*');
-    % %Top Left
-    % n = 0;
-    % y = 100;
-    % x = 100;
-    % while(x > 1 && n == 0)
-    %     if(EdgeimR(x,y) > 0.5 && n == 0)
-    %         TLPoint = [x,y];
-    %         n = n + 1;
-    %     end
-    %     if(x == y)
-    %         x = y;
-    %         y = y + 1;
-    %     end
-    %     x = x + 1;
-    % end
-    % plot(TLPoint(2),TLPoint(1),'*');
-    % VerticalV = HighPoint - LowPoint;
-    % syms t
-    % LineVertical = LowPoint + t * VerticalV;
-    % HorizontalV = RightPoint - LeftPoint;
-    % syms u
-    % LineHorizontal = LeftPoint + u * HorizontalV;
+    
+    % Mittelpunkt des Kreises bestimmen    
+    xi = 0;
+    yi = 0;
+    Ai = 0;
+    sumup = 0;
+    sumden = 0;
 
-    %Intersection of corner lines
-    % x = [TLPoint(1) BLPoint(1); BRPoint(1) TRPoint(1)];  %# Starting points in first row, ending points in second row
-    % y = [TLPoint(2) BLPoint(2); BRPoint(2) TRPoint(2)];
-    % dx = diff(x);  %# Take the differences down each column
-    % dy = diff(y);
-    % den = dx(1)*dy(2)-dy(1)*dx(2);  %# Precompute the denominator
-    % ua = (dx(2)*(y(1)-y(3))-dy(2)*(x(1)-x(3)))/den;
-    % ub = (dx(1)*(y(1)-y(3))-dy(1)*(x(1)-x(3)))/den;
-    % xi = x(1)+ua*dx(1);
-    % yi = y(1)+ua*dy(1);
-    % xi1 = round(xi);
-    % yi1 = round(yi);
-    %Intersection of horizontal and vertical line
-    x = [LowPoint(1) LeftPoint(1); HighPoint(1) RightPoint(1)];  %# Starting points in first row, ending points in second row
-    y = [LowPoint(2) LeftPoint(2); HighPoint(2) RightPoint(2)];
-    dx = diff(x);  %# Take the differences down each column
-    dy = diff(y);
-    den = dx(1)*dy(2)-dy(1)*dx(2);  %# Precompute the denominator
-    ua = (dx(2)*(y(1)-y(3))-dy(2)*(x(1)-x(3)))/den;
-    %ub = (dx(1)*(y(1)-y(3))-dy(1)*(x(1)-x(3)))/den;
-    xi = x(1)+ua*dx(1);
-    yi = y(1)+ua*dy(1);
-    xi = round(xi);
-    yi = round(yi);
-    % % How far away are the two intersections + take the point between them
-    % d1 = sqrt((xi - xi1)^2+(yi - yi1)^2);
+    for k = 1:1024
+        Ai = 0;
+        for l = 1:1024
+            if EdgeimR(l,k) == 1
+                yi = k;
+                Ai = Ai + 1;
+            end
+        end
+        sumup = sumup + (Ai*yi);
+        sumden = sumden + Ai;
+    end
 
-    plot(HighPoint(2),HighPoint(1),'*')
-    plot(LowPoint(2),LowPoint(1),'*')
-    plot(RightPoint(2),RightPoint(1),'*')
-    plot(LeftPoint(2),LeftPoint(1),'*')
-    plot(yi,xi,'r*')
-    % plot(yi1,xi1,'b*')
-    plot(512,512,'*')
-    figure;
-    % % Recenter the image, only if the difference between the two detected point
-    % % (Corner and Horizontal Intersection) is less than 100 -> if it is more ther must be something wrong 
-    % if(d1 < 100) 
-    %     xi = (xi1 + xi)/2;
-    %     yi = (yi1 + yi)/2;
-        drx = (-1) * (xi - N/2);
-        dry = (-1) * (yi - N/2);
-        EdgeimRShift = circshift(EdgeimR,drx,1);
-        EdgeimRShift = circshift(EdgeimRShift,dry,2);
-    % else
-    %     EdgeimRShift = EdgeimR;
-    % end
+    xs = sumup/sumden;
+    xs = round(xs);
+
+    for k = 1:1024
+        Ai = 0;
+        for l = 1:1024
+            if EdgeimR(k,l) == 1
+                xi = k;
+                Ai = Ai + 1;
+            end
+        end
+        sumup = sumup + (Ai*xi);
+        sumden = sumden + Ai;
+    end    
+
+    ys = sumup/sumden;
+    ys = round(ys);
+
+    plot(xs,ys,'Linestyle','none','Marker','.','Markersize',10);
+    plot(512,512,'g*');
+    %Shiften
+    drx = (-1) * (xs - N/2);
+    dry = (-1) * (ys - N/2);
+    EdgeimRShift = circshift(EdgeimR,drx,1);
+    EdgeimRShift = circshift(EdgeimRShift,dry,2);
+    hold off
+    % figure;
+    colormap gray
     imagesc(EdgeimRShift);
     hold on;
     plot(512 + dry, 512 + drx,'*');
     plot(512,512,'g*')
-    EdgeimP = ImToPolar (EdgeimRShift, 0, 1, M/2, BScanN);
-    figure;
+    fprintf("Computing ImToPolar\n");
+    EdgeimP = ImToPolar (EdgeimRShift, 0, 1, M/2, n);
+    hold off
+    % figure;
+    colormap gray
     imagesc(EdgeimP)
-    hold off;
-    % Detect the Diameter
-    % the row in which the pipe was detected in one B-Scan + row of the edge of a B-Scan after half a rotation
-    % asuming that the rotation was constant during one B-Scan
-    for i = 1:round(BScanN/2)
-     %   for j = 150:300 %variable which has to be set: look in which rows the pipe is detected
-            if (i+(round(BScanN/2)) > size(LineEdge))
-                 disp('exceeding matrix limitations3')
-                 Diameter(i) = Diameter(i-1);
-             else
-                Diameter(i) = LineEdge(i) + LineEdge(i+(round(BScanN/2)));
-      %      end
-        end
-    end
-    m = 1;
-    for i = 1:N
-        for j = 1:N
-            if (EdgeimR(i,j) > 0)
-                LineKartesian(1,m) = i;
-                LineKartesian(2,m) = j;
-                m = m + 1;
+    for i = 1:n
+        for j =100:m-100
+            if(EdgeimP(j,i) > 1 && EdgeimP(j+5,i) > 1)
+                EdgeShift(i) = j-1; 
             end
         end
     end
-    figure;
-    colormap gray
-    CKartesian = PolarToIm (C(:,2100:3500), 0, 1, M, N);
-    imagesc(CKartesian)
-    hold on
-    xyz = size(LineKartesian);
-    for i = 1:xyz(2)
-        plot(LineKartesian(2,i),LineKartesian(1,i),'.r');
-    end
-    hold off
-    figure;
-    imagesc(CKartesian)
-
+    % Detect the Diameter
+    % the row in which the pipe was detected in one B-Scan + row of the edge of a B-Scan after half a rotation
+    % asuming that the rotation was constant during one B-Scan
+    ne = size(EdgeShift,2)/2;
+    for i = 1:round(ne/2)
+         if (i+(round(ne/2)) > ne)
+%                  disp('exceeding matrix limitations3')
+                 Diameter(i) = Diameter(i-1);
+         else
+                 Diameter(i) = EdgeShift(i) + EdgeShift(i+(round(ne/2)));
+         end
+     end
+     m = 1;
+     %LineKartesian = zeros(N,N); %fbr
+     for i = 1:N
+         for j = 1:N
+             if (EdgeEdgeimR(i,j) > 0.5)
+                 LineKartesian(1,m) = i;
+                 LineKartesian(2,m) = j;
+                 m = m + 1;
+             end
+         end
+     end
+     % figure;
+     hold off
+     colormap gray
+     fprintf("Computing PolarToIm\n");
+     CKartesian = PolarToIm (C, 0, 1, M, N);
+     imagesc(CKartesian)
+     hold on
+     [mL,nL] = size(LineKartesian);
+     for i = 1:nL
+         plot(LineKartesian(2,i),LineKartesian(1,i),'.r');
+     end
+     hold off
     %%
-    RadialMin           = min(LineEdge);% to see if there is a ZERO 
-    RadialMax           = max(LineEdge);
+    %RadialMin           = min(LineEdge);% to see if there is a ZERO 
+    %RadialMax           = max(LineEdge);
     DiameterMin         = min(Diameter);
     DiameterMax         = max(Diameter);
     DiameterEverage     = mean(Diameter);
     DiameterIntervall   = DiameterMax - DiameterMin;
     DiameterDelta = 0;
-    for i = 1 : round(BScanN/2)
-        DiameterDelta = DiameterDelta + (DiameterEverage - Diameter(i))^2;
-    end
-    DiameterError = sqrt(DiameterDelta/round(BScanN/2));
+%     for i = 1 : round(ne/2)
+%         DiameterDelta = DiameterDelta + (DiameterEverage - Diameter(i))^2;
+%     end
+    % DiameterError = sqrt(DiameterDelta/round(ne/2));
+end
