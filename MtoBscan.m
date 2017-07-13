@@ -1,4 +1,4 @@
-function werte_MaxMax = MtoBscan(C)
+function werte_MaxMax = MtoBscan(C, CMAX)
     % f=fopen('09052017034909__ascan_3.bin')
     % B=fread(f,'float32');
 
@@ -13,10 +13,7 @@ function werte_MaxMax = MtoBscan(C)
     imagesc(C)
 
     %Linien entfernen 
-    %CMAX=max(C(:));
-    %C(78:83,:)=35/CMAX; %CMAX needs to be passed as value or this doesnt
-    %work
-    C(78:83,:)=0.35;
+    C(78:83,:)=35/CMAX;
 
     %Medianfilter/Kantenfilter (es wird nur ein Ausschnitt aus der Matrix betrachtet)
     C1=medfilt2(C);
@@ -49,7 +46,7 @@ function werte_MaxMax = MtoBscan(C)
     werte_eins=0;
 
     %Abstände der gefundenen Punkte werden ermittelt
-    for i = 1:10000 
+    for i = 1:n
         if(x(i)==1)
             anz_eins=anz_eins+1; 
             werte_eins(anz_eins)=eins+1; 
