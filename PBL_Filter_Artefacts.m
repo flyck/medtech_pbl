@@ -1,6 +1,6 @@
 % This function returns the scanned image without the artefacts introduced
 % by the measurement device.
-function C = PBL_Filter_Artefacts(C)
+function [C,C_Artefacts] = PBL_Filter_Artefacts(C)
     %% Filters artefacts
     % Parameters:
     medfilt2_iteration_Th = 4; % amount of times medfilt2 should be executed
@@ -38,8 +38,8 @@ function C = PBL_Filter_Artefacts(C)
     % Try different filters for getting rid of noise and binarize it again
 
     % C = im2double(C);
-    % C = imgaussfilt(C, gaussfilt_Th);
-    % C = im2bw(C, im2bw_Th_2); % the higher the value the blacker the picture
+    C = imgaussfilt(C, gaussfilt_Th);
+    C = im2bw(C, im2bw_Th_2); % the higher the value the blacker the picture
     % colormap gray;
     % imagesc(C);
     %%  
@@ -93,7 +93,7 @@ function C = PBL_Filter_Artefacts(C)
     % disp("100% erreicht")
     %% 
     % Apply and show the previously computed mask
-
+    C_Artefacts = C;
     C = original;
     grey_val = 0.4; % todo manueller wert
     for j = 250 : -1 : 190
