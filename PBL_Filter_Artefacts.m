@@ -9,9 +9,16 @@ function [C_Artefacts, C] = PBL_Filter_Artefacts(C)
     im2bw_Th_2 = 0.45; % threshhold for second im2bw
     CatheterArtefactLower = 160;
     
+    %figure;
+    colormap gray;
+    imagesc(C);
+    
     %% 
     % Cut off the catheter at the top by greying it out
     C(1:CatheterArtefactLower,:) = 0.44;
+    %figure;
+    colormap gray;
+    imagesc(C);
     
     %%
     % Copy the picture, this is later used to substract the computed mask
@@ -75,7 +82,7 @@ function [C_Artefacts, C] = PBL_Filter_Artefacts(C)
     end
     colormap gray;
     imagesc(C);
-    
+    %%
     % now create the Artefacts Malte needs
     CN = C_Malte;
     CN = im2double(CN);
