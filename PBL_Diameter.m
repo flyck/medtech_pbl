@@ -182,7 +182,7 @@ function [DiameterMin, DiameterMax,DiameterEverage] = PBL_Filter_Artefacts(C_Art
     imagesc(EdgeimP)
     for i = 1:n
         for j =100:m-100
-            if(EdgeimP(j,i) > 1 && EdgeimP(j+5,i) > 1)
+            if(EdgeimP(j,i) < 1 && EdgeimP(j-1,i) == 1)
                 EdgeShift(i) = j-1; 
             end
         end
@@ -191,12 +191,12 @@ function [DiameterMin, DiameterMax,DiameterEverage] = PBL_Filter_Artefacts(C_Art
     % the row in which the pipe was detected in one B-Scan + row of the edge of a B-Scan after half a rotation
     % asuming that the rotation was constant during one B-Scan
     ne = size(EdgeShift,2)/2;
-    for i = 1:round(ne/2)
-         if (i+(round(ne/2)) > ne)
+    for i = 1:round(ne)
+         if ((i+(round(ne)) > round(2*ne)) && i > 1)
 %                  disp('exceeding matrix limitations3')
                  Diameter(i) = Diameter(i-1);
          else
-                 Diameter(i) = EdgeShift(i) + EdgeShift(i+(round(ne/2)));
+                 Diameter(i) = EdgeShift(i) + EdgeShift(i+(round(ne)));
          end
      end
      m = 1;
@@ -210,7 +210,7 @@ function [DiameterMin, DiameterMax,DiameterEverage] = PBL_Filter_Artefacts(C_Art
              end
          end
      end
-     % figure;
+     %figure;
      hold off
      colormap gray
      fprintf("Computing PolarToIm\n");
@@ -225,11 +225,11 @@ function [DiameterMin, DiameterMax,DiameterEverage] = PBL_Filter_Artefacts(C_Art
     %%
     %RadialMin           = min(LineEdge);% to see if there is a ZERO 
     %RadialMax           = max(LineEdge);
-    DiameterMin         = min(Diameter);
-    DiameterMax         = max(Diameter);
-    DiameterEverage     = mean(Diameter);
-    DiameterIntervall   = DiameterMax - DiameterMin;
-    DiameterDelta = 0;
+    DiameterMin         = min(Diameter)*0.0045/1.33;
+    DiameterMax         = max(Diameter)*0.0045/1.33;
+    DiameterEverage     = mean(Diameter)*0.0045/1.33;
+    % DiameterIntervall   = DiameterMax - DiameterMin;
+    % DiameterDelta = 0;
 %     for i = 1 : round(ne/2)
 %         DiameterDelta = DiameterDelta + (DiameterEverage - Diameter(i))^2;
 %     end
