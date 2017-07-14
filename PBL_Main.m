@@ -22,12 +22,12 @@ function [C, CMAX] = main()
     MtoBscan(C, CMAX);
     
     % Filter artefacts
-    PBL_Filter_Artefacts();
+    % [C,A] = PBL_Filter_Artefacts(C);
 
     % Determine Diameter
     % C shouldnt have artifacts at this point! Otherwise the diameter cant be
     % computed correctly.
-    PBL_Determine_Diameter();
+    %PBL_Determine_Diameter();
 end
 
 % Load the measured data into the workspace.
